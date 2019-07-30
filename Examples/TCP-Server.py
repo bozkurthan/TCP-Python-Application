@@ -1,5 +1,4 @@
 import socket
-import sys
 
 # Create a TCP/IP socket
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -7,7 +6,7 @@ sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 # Bind the socket to the port
 server_address = ('localhost', 10000)
 print('starting up on {} port {}'.format(*server_address))
-sock.bind(server_address)
+sock.bind(sock)
 
 # Listen for incoming connections
 sock.listen(1)
@@ -17,7 +16,7 @@ while True:
     print('waiting for a connection')
     connection, client_address = sock.accept()
     try:
-        print('connection from', client_address)
+        print('connection from', server_address) #TODO something is wrong here
 
         # Receive the data in small chunks and retransmit it
         while True:
@@ -28,8 +27,7 @@ while True:
                 connection.sendall(data)
             else:
                 print('no data from', client_address)
-                break
+                #Something is missing
 
     finally:
         # Clean up the connection
-        connection.close()
