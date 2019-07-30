@@ -26,5 +26,5 @@ try:
         print('received {!r}'.format(data))
 
 finally:
-    print('closing socket')
+	print('closing socket')
 	sock.close()
