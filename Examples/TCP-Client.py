@@ -1,29 +1,26 @@
-import socket
-
-# Create a TCP/IP socket
-sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
-# Connect the socket to the port where the server is listening
-server_address = ('localhost', 10000)
-print('connecting to {} port {}'.format(*server_address))
-sock.connect(server_address)
-
-try:
-
-    # Send data
-    message = b'This is the message.  It will be repeated.'
-    print('sending {!r}'.format(message))
-    sock.sendall(message)
-
-    # Look for the response
-    amount_received = 0
-    amount_expected = len(message)
-
-    while amount_received < amount_expected:
-        data = sock.recv(16)
-        amount_received += len(data)
-        print('received {!r}'.format(data))
-
-finally:
-    print('closing socket')
-    sock.close()
+import socket 
+import select 
+import sys 
+  
+server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+IP_address = "target_ip"
+Port = 9999
+server.connect((IP_address, Port)) 
+  
+while True: 
+  
+    # maintains a list of possible input streams 
+    sockets_list = [sys.stdin, server] 
+    read_sockets,write_socket, error_socket = select.select(sockets_list,[],[]) 
+  
+    for socks in read_sockets: 
+        if socks == server: 
+            message = socks.recv(2048) 
+            print message 
+        else: 
+            message = sys.stdin.readline() 
+            server.send(message) 
+            sys.stdout.write("<You>") 
+            sys.stdout.write(message) 
+            sys.stdout.flush() 
+server.close() 
