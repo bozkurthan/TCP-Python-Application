@@ -1,35 +1,66 @@
-import socket
+import socket 
+import select 
+import sys 
+from thread import *
 
-# Create a TCP/IP socket
-sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+server = socket.socket(socket.AF_INET, socket.SOCK_STREAM) 
+server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1) 
+  
+IP_address = "your_ıp" 
+Port = 9999
 
-# Bind the socket to the port
-server_address = ('localhost', 10000)
-print('starting up on {} port {}'.format(*server_address))
-sock.bind(server_address)
+server.bind((IP_address, Port)) 
+server.listen(100) 
+  
+list_of_clients = [] 
 
-# Listen for incoming connections
-sock.listen(1)
+print("Wait for connection...")  
+def clientthread(conn, addr): 
+  
+    # sends a message to the client whose user object is conn 
+    conn.send("Welcome to this chatroom!") 
+  
+    while True: 
+            try: 
+                message = conn.recv(2048) 
+                if message: 
+                    print "<" + addr[0] + "> " + message 
+  
+                    # Calls broadcast function to send message to all 
+                    message_to_send = "<" + addr[0] + "> " + message 
+                    broadcast(message_to_send, conn) 
+  
+                else: 
+                    remove(conn) 
+            except: 
+                continue
 
-while True:
-    # Wait for a connection
-    print('waiting for a connection')
-    connection, client_address = sock.accept()
-    try:
-        print('connection from', client_address) #TODO something is wrong here
+def broadcast(message, connection): 
+    for clients in list_of_clients: 
+        if clients!=connection: 
+            try: 
+                clients.send(message) 
+            except: 
+                clients.close() 
+  
+                # if the link is broken, we remove the client 
+                remove(clients) 
 
-        # Receive the data in small chunks and retransmit it
-        while True:
-            data = connection.recv(16)
-            print('received {!r}'.format(data))
-            if data:
-                print('sending data back to the client')
-                connection.sendall(data)
-            else:
-                print('no data from', client_address)
-                break
+def remove(connection): 
+    if connection in list_of_clients: 
+        list_of_clients.remove(connection) 
+  
+while True: 
+    conn, addr = server.accept() 
+    list_of_clients.append(conn) 
+  
+    # prints the address of the user that just connected 
+    print addr[0] + " connected"
+  
+    # creates and individual thread for every user  
+    # that connects 
+    start_new_thread(clientthread,(conn,addr))     
+  
+conn.close() 
+server.close() 
 
-    finally:
-        # Clean up the connection
-        connection.close()
-	
